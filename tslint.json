@@ -1,0 +1,10 @@
+{
+	"extends": ["tslint:recommended", "tslint-config-prettier"],
+	"rules": {
+		"no-namespace": false,
+		"no-internal-module": false,
+		"no-console": false,
+		"no-empty": false,
+		"semicolon": true
+	}
+}
