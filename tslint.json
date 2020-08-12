@@ -5,6 +5,7 @@
 		"no-internal-module": false,
 		"no-console": false,
 		"no-empty": false,
-		"semicolon": true
+		"semicolon": true,
+		"max-classes-per-file": false
 	}
 }
