@@ -1,7 +1,7 @@
 import { CredentialsManager } from "../../utils/credentials-manager";
 import { TmdbArgv } from "../../utils/tmdb-argv";
 import { Browser } from "../../../module/browser";
-import { Auth } from "../../../module";
+import { Auth } from "../../../module/auth";
 
 exports.command = 'episodes';
 exports.desc = 'Posts an episode to an existing TV show on TMDb';

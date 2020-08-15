@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { TmdbArgv } from "./tmdb-argv";
-import { Auth } from "../../module";
+import { Auth } from "../../module/auth";
 import { Config } from "../../config";
 
 /**
@@ -16,7 +16,7 @@ export module CredentialsManager {
 	export enum CredentialsSource {
 		/** Prompts the user for their username and password to use them headlessly */
 		prompt = 'prompt',
-		/** Reads `TMDB_POST_USERNAME` and `TMDB_POST_PASSWORD` environment variables to use them headlessly */
+		/** Reads `TMDBPOST_USERNAME` and `TMDBPOST_PASSWORD` environment variables to use them headlessly */
 		env = 'env',
 	}
 	export const AUTH_METHODS: ReadonlyArray<CredentialsSource> = [
@@ -31,7 +31,7 @@ export module CredentialsManager {
 	/**
 	 * Reads username and password from either:
 	 * 1. The `-u` and `-p` arguments
-	 * 2. The `TMDB_POST_USERNAME` and `TMDB_POST_PASSWORD` environment variables
+	 * 2. The `TMDBPOST_USERNAME` and `TMDBPOST_PASSWORD` environment variables
 	 * 3. Prompted user input
 	 * @param argv Arguments
 	 */

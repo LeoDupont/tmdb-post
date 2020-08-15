@@ -1,0 +1,6 @@
+{
+	// One only needs an empty tsconfig.json to calm VSCode...
+	"compilerOptions": {
+		"esModuleInterop": true
+	}
+}

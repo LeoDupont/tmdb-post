@@ -1,5 +1,7 @@
 import puppeteer from 'puppeteer';
 import { Errors } from './errors';
+import { Browser } from './browser';
+import { TmdbWebsite } from './tmdb-website';
 
 /**
  * Manages authentication to TMDb website.
@@ -18,9 +20,7 @@ export module Auth {
 	export async function authenticate(browser: puppeteer.Browser, credentials: Credentials): Promise<boolean> {
 		// === Go to the login page ===
 
-		const pages = await browser.pages();
-		const page = pages[0];
-		await page.goto('https://www.themoviedb.org/login');
+		const page = await Browser.getAPage(browser, TmdbWebsite.getLoginUrl());
 
 		// === Log in with credentials ===
 
@@ -31,7 +31,7 @@ export module Auth {
 
 		// === Check that we are logged in ===
 
-		const loggedIn = await checkIfLoggedIn(page);
+		const loggedIn = await checkIfLoggedIn(browser, page);
 
 		// --- Get the error message ---
 		if (!loggedIn) {
@@ -55,11 +55,17 @@ export module Auth {
 	}
 
 	/**
-	 * Checks if we are logged in a given TMDB page.
-	 * @param page A browser page already open to TMDb
+	 * Checks if we are logged in TMDb.
+	 * @param browser An open browser
+	 * @param page Or a page already loaded to a TMDb page
 	 * @returns `true` if we're logged in
 	 */
-	export async function checkIfLoggedIn(page: puppeteer.Page): Promise<boolean> {
+	export async function checkIfLoggedIn(browser: puppeteer.Browser, page?: puppeteer.Page): Promise<boolean> {
+
+		if (!page) {
+			page = await Browser.getAPage(browser, TmdbWebsite.BASE_URL);
+		}
+
 		// Look for the User element in the header's nav bar:
 		return (await page.$('header ul > li.user')) !== null;
 	}
