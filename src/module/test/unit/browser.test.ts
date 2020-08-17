@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import { Browser } from "../browser";
+import { Browser } from "../../browser";
 import { Config } from "../../config";
 
 describe('Browser', () => {
@@ -28,7 +28,7 @@ describe('Browser', () => {
 	describe('attachBrowser()', () => {
 
 		test('should attach to open browser', async () => {
-			const browser = await Browser.attachToBrowser(Config.browsers.WS_DEBUGGER_URL);
+			const browser = await Browser.attachToBrowser(Config.browsers.WS_DEBUGGER_URL!);
 			expect(browser.isConnected()).toBeTruthy();
 			await browser.disconnect();
 		});
@@ -40,6 +40,7 @@ describe('Browser', () => {
 		const githubUrl = 'https://github.com/';
 		const githubExploreUrl = 'https://github.com/explore';
 		let browser: puppeteer.Browser;
+		let githubHomePage: puppeteer.Page;
 		let githubExplorePage: puppeteer.Page;
 
 		beforeAll(async () => {
@@ -60,17 +61,31 @@ describe('Browser', () => {
 		}, 30000);
 
 		test('3. should return existing GitHub Explore page when asked for GitHub Home', async () => {
-			const githubHomePage = await Browser.getAPage(browser, githubUrl);
+			githubHomePage = await Browser.getAPage(browser, githubUrl);
 			expect(githubHomePage).toBe(githubExplorePage);
 		}, 30000);
 
-		test('4. should create a new page to go to Stackoverflow', async () => {
+		test('4. should return new GitHub Home page if `exactUrl`', async () => {
+			githubHomePage = await Browser.getAPage(browser, githubUrl, true);
+			const pages = await browser.pages();
+			expect(githubHomePage).not.toBe(githubExplorePage);
+			expect(pages).toHaveLength(2);
+		});
+
+		test('5. should return same GitHub Home page if `exactUrl`', async () => {
+			const page = await Browser.getAPage(browser, githubUrl, true);
+			const pages = await browser.pages();
+			expect(page).toBe(githubHomePage);
+			expect(pages).toHaveLength(2);
+		});
+
+		test('5. should create a new page to go to Stackoverflow', async () => {
 			const stackUrl = 'https://stackoverflow.com/';
 			const stackPage = await Browser.getAPage(browser, stackUrl);
 			const pages = await browser.pages();
 			expect(stackPage.url()).toBe(stackUrl);
 			expect(stackPage).not.toBe(githubExplorePage);
-			expect(pages.length).toBe(2);
+			expect(pages).toHaveLength(3);
 		}, 3000);
 	});
 

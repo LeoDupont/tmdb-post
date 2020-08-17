@@ -36,14 +36,18 @@ export module Browser {
 	 * Returns an already open page or a freshly created one.
 	 * @param browser An open browser
 	 * @param url The beginning of the URL we want our page to be
+	 * @param exactUrl `true` to get a page at the exact `url` (and not only starting with it)
 	 */
-	export async function getAPage(browser: puppeteer.Browser, url?: string): Promise<puppeteer.Page> {
+	export async function getAPage(browser: puppeteer.Browser, url?: string, exactUrl?: boolean): Promise<puppeteer.Page> {
+
+		console.log('getting a page to', url);
 
 		let thePage: puppeteer.Page | undefined;
 
 		// === Choose a page ===
 
 		const pages = await browser.pages();
+		console.log('open pages:', pages.map(p => p.url()));
 		if (pages.length > 0) {
 
 			if (url) {
@@ -54,9 +58,14 @@ export module Browser {
 				for (const page of pages) {
 
 					// Return the first page that is on the right domain:
-					if (page.url().startsWith(url)) {
+					if (
+						( !exactUrl && page.url().startsWith(url) ) ||
+						( page.url() === url )
+					) {
+						console.log('found an already open page to', page.url());
 						return page;
 					}
+					console.log('no page found...');
 
 					// Save blank page for eventual use:
 					if (page.url() === 'about:blank') {
