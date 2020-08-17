@@ -27,7 +27,7 @@ describe('Browser', () => {
 
 	describe('attachBrowser()', () => {
 
-		test('should attach to open browser', async () => {
+		test('should attach to an open browser', async () => {
 			const browser = await Browser.attachToBrowser(Config.browsers.WS_DEBUGGER_URL!);
 			expect(browser.isConnected()).toBeTruthy();
 			await browser.disconnect();

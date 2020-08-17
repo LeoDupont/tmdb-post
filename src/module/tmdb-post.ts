@@ -3,7 +3,8 @@ import { Browser } from './browser';
 import { Errors } from './errors';
 import { Episode, Season } from './data/tv-show';
 import { Auth } from './tmdb-scraping/auth';
-import { TvShows } from './tmdb-scraping/tv-shows';
+import { ShowSeasons } from './tmdb-scraping/show-seasons';
+import { ShowEpisodes } from './tmdb-scraping/show-episodes';
 
 /**
  * Main class of tmdb-post.
@@ -25,6 +26,7 @@ export class TmdbPost {
 		} else {
 			this.browser = await Browser.launchBrowser(options);
 		}
+		this.checkBrowser();
 	}
 
 	/**
@@ -81,7 +83,7 @@ export class TmdbPost {
 	 */
 	public async postSeason(showId: string, season: Season, allowUpdate?: boolean) {
 		this.checkBrowser();
-		return TvShows.postSeason(this.browser!, showId, season, allowUpdate);
+		return ShowSeasons.postSeason(this.browser!, showId, season, allowUpdate);
 	}
 
 	// -------------------------------------------------------
@@ -97,7 +99,7 @@ export class TmdbPost {
 	 */
 	public async postEpisodesInSeason(showId: string, season: number, episodes: Episode[], allowUpdate?: boolean) {
 		this.checkBrowser();
-		return TvShows.postEpisodesInSeason(this.browser!, showId, season, episodes, allowUpdate);
+		return ShowEpisodes.postEpisodesInSeason(this.browser!, showId, season, episodes, allowUpdate);
 	}
 
 }
