@@ -1,7 +1,7 @@
 import { CredentialsManager } from "../../utils/credentials-manager";
 import { TmdbArgv } from "../../utils/tmdb-argv";
 import { Browser } from "../../../module/browser";
-import { Auth } from "../../../module/auth";
+import { Auth } from "../../../module/tmdb-scraping/auth";
 
 exports.command = 'episodes';
 exports.desc = 'Posts an episode to an existing TV show on TMDb';
@@ -15,7 +15,7 @@ exports.handler = async (argv: TmdbArgv) => {
 	console.debug("credentials:", JSON.stringify(credentials));
 
 	// Browser:
-	const browser = await Browser.launchBrowser({ head: argv.head, slow: argv.slow });
+	const browser = await Browser.launchBrowser({ headless: !argv.head, slowMo: argv.slow ? 250 : 0 });
 	console.debug("browser:", JSON.stringify(browser.userAgent));
 
 	// Auth:

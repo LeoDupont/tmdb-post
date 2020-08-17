@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
-import { Errors } from './errors';
-import { Browser } from './browser';
-import { TmdbWebsite } from './tmdb-website';
+import { Errors } from '../errors';
+import { Browser } from '../browser';
+import { Navigation } from './navigation';
 
 /**
  * Manages authentication to TMDb website.
@@ -20,7 +20,7 @@ export module Auth {
 	export async function authenticate(browser: puppeteer.Browser, credentials: Credentials): Promise<boolean> {
 		// === Go to the login page ===
 
-		const page = await Browser.getAPage(browser, TmdbWebsite.getLoginUrl());
+		const page = await Browser.getAPage(browser, Navigation.getLoginUrl());
 
 		// === Log in with credentials ===
 
@@ -61,12 +61,23 @@ export module Auth {
 	 * @returns `true` if we're logged in
 	 */
 	export async function checkIfLoggedIn(browser: puppeteer.Browser, page?: puppeteer.Page): Promise<boolean> {
-
 		if (!page) {
-			page = await Browser.getAPage(browser, TmdbWebsite.BASE_URL);
+			page = await Browser.getAPage(browser, Navigation.BASE_URL);
 		}
 
 		// Look for the User element in the header's nav bar:
 		return (await page.$('header ul > li.user')) !== null;
+	}
+
+	/**
+	 * Throws an error if we're not logged in.
+	 * @param browser An open browser
+	 * @param page Or a page already loaded to a TMDb page
+	 * @throws `AuthenticationRequired` if not logged in
+	 */
+	export async function authGuard(browser: puppeteer.Browser, page?: puppeteer.Page) {
+		if (! await Auth.checkIfLoggedIn(browser, page)) {
+			throw new Errors.AuthenticationRequired();
+		}
 	}
 }

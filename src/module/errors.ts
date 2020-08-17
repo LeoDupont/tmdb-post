@@ -6,5 +6,9 @@ export module Errors {
 
 	// Auth:
 	export class LoginFailed extends Error {}
+	export class AuthenticationRequired extends Error {}
+
+	// TMDb:
+	export class NotFound extends Error {}
 
 }

@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { Argv } from "yargs";
 import { CredentialsManager } from "../utils/credentials-manager";
-import { ENV_VARS_NAMES } from "../../config";
+import { ENV_VARS_NAMES } from "../../module/config";
 
 exports.command = 'post';
 exports.desc = 'Post data to TMDb';

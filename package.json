@@ -12,7 +12,8 @@
   "scripts": {
     "lint": "tslint -p tsconfig.json",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
-    "test": "jest",
+    "test": "jest --testPathIgnorePatterns manual.test",
+    "test:tv-shows": "jest tv-shows.manual.test",
     "build": "tsc -p .",
     "prepublishOnly": "npm test && npm run lint",
     "prepare": "npm run build",

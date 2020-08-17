@@ -1,8 +1,8 @@
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { TmdbArgv } from "./tmdb-argv";
-import { Auth } from "../../module/auth";
-import { Config } from "../../config";
+import { Auth } from "../../module/tmdb-scraping/auth";
+import { Config } from "../../module/config";
 
 /**
  * Gets the user's credentials.
