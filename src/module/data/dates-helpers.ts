@@ -3,8 +3,8 @@
  */
 export module DatesHelpers {
 
-	/** Matches three groups of figures in a string formatted as `XX/YY/ZZZZ`. */
-	const twoTwoFourDateRegex = /(\d{2})\/(\d{2})\/(\d{4})/;
+	/** Matches three groups of figures in a string formatted as `X[X]/Y[Y]/ZZZZ`. */
+	const twoTwoFourDateRegex = /(\d{1,2})\/(\d{1,2})\/(\d{4})/;
 
 	/**
 	 * Translates and American date into an ISO date.

@@ -12,8 +12,9 @@
  *
  */
 
-import { Episode } from "../../data/tv-show";
 import { TmdbPost } from "../..";
+import { Episode } from "../../data/tv-show";
+import { Status } from "../../data/feedback";
 import { TestHelpers } from "../test-helpers";
 
 describe('ShowEpisodes', () => {
@@ -25,17 +26,16 @@ describe('ShowEpisodes', () => {
 				showId: <string> '12121-nouvelle-star',
 				season: <number> 9,
 				episodes: <Episode[]> [
-					{ number: 1, overview: ' ' },
-					{ number: 2, overview: ' ' },
+					{ number: 1 },
+					{ number: 2 },
 				],
 			},
 			NEW: {
 				showId: <string> '12121-nouvelle-star',
 				season: <number> 9,
 				episodes: <Episode[]> [
-					// { number: 1, name: 'Casting Marseille', overview: '', date: '2012-12-11' },
-					{ number: 2, name: 'Casting Lyon', overview: 'Second casting', date: '2012-12-18' },
-					{ number: 3, name: 'Casting Paris', overview: '', date: '2012-12-25' },
+					{ number: 4, name: 'Theatre Day 1', overview: '', date: '2013-01-01' },
+					{ number: 5, name: 'Theatre Day 2', overview: '', date: '2013-01-08' },
 				],
 			}
 		};
@@ -47,38 +47,49 @@ describe('ShowEpisodes', () => {
 		}, 30000);
 		afterAll(() => {
 			return tmdb.destroy();
-		}, 30000);
+		});
 
 		test.skip('can ignore existing episodes', async () => {
-			const added = await tmdb.postEpisodesInSeason(
+			const feedbacks = await tmdb.postEpisodesInSeason(
 				UNIQUE_DATA.EXISTING.showId,
 				UNIQUE_DATA.EXISTING.season,
 				UNIQUE_DATA.EXISTING.episodes,
-				false
+				false,
+				(fb) => console.log(JSON.stringify(fb))
 			);
-			expect(added).toBeTruthy();
-		}, 30000);
+
+			console.log(JSON.stringify(feedbacks));
+			expect(feedbacks.every(f => f.status === Status.IGNORED)).toBeTruthy();
+		}, 300000);
 
 		test.skip('can update existing episodes', async () => {
-			const added = await tmdb.postEpisodesInSeason(
+			const feedbacks = await tmdb.postEpisodesInSeason(
 				UNIQUE_DATA.EXISTING.showId,
 				UNIQUE_DATA.EXISTING.season,
 				UNIQUE_DATA.EXISTING.episodes,
-				true
+				true,
+				(fb) => console.log(JSON.stringify(fb))
 			);
-			expect(added).toBeTruthy();
-		}, 30000);
+
+			console.log(JSON.stringify(feedbacks));
+			expect(feedbacks.every(f =>
+				f.status === Status.UPDATED ||
+				f.status === Status.IGNORED
+			)).toBeTruthy();
+		}, 300000);
 
 		test.skip('can post new episodes', async () => {
-			const added = await tmdb.postEpisodesInSeason(
+			const feedbacks = await tmdb.postEpisodesInSeason(
 				UNIQUE_DATA.NEW.showId,
 				UNIQUE_DATA.NEW.season,
 				UNIQUE_DATA.NEW.episodes,
-				false
+				false,
+				(fb) => console.log(JSON.stringify(fb))
 			);
-			expect(added).toBeTruthy();
-		}, 30000);
 
+			console.log(JSON.stringify(feedbacks));
+			expect(feedbacks.every(f => f.status === Status.ADDED)).toBeTruthy();
+		}, 300000);
 
 	});
 

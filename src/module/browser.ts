@@ -40,14 +40,11 @@ export module Browser {
 	 */
 	export async function getAPage(browser: puppeteer.Browser, url?: string, exactUrl?: boolean): Promise<puppeteer.Page> {
 
-		console.log('getting a page to', url);
-
 		let thePage: puppeteer.Page | undefined;
 
 		// === Choose a page ===
 
 		const pages = await browser.pages();
-		console.log('open pages:', pages.map(p => p.url()));
 		if (pages.length > 0) {
 
 			if (url) {
@@ -62,10 +59,8 @@ export module Browser {
 						( !exactUrl && page.url().startsWith(url) ) ||
 						( page.url() === url )
 					) {
-						console.log('found an already open page to', page.url());
 						return page;
 					}
-					console.log('no page found...');
 
 					// Save blank page for eventual use:
 					if (page.url() === 'about:blank') {

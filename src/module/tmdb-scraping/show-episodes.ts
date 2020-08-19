@@ -2,10 +2,10 @@ import puppeteer from 'puppeteer';
 import { Browser } from '../browser';
 import { Navigation } from './navigation';
 import { Errors } from '../errors';
-import { Season, Episode } from '../data/tv-show';
+import { Episode } from '../data/tv-show';
 import { InterfaceHelpers } from './interface-helpers';
 import { DatesHelpers } from '../data/dates-helpers';
-import { parsed } from 'yargs';
+import { FeedbackCallback, Feedback, Status } from '../data/feedback';
 
 export module ShowEpisodes {
 
@@ -34,9 +34,10 @@ export module ShowEpisodes {
 	 * @param showId TMDb ID of the show
 	 * @param season Season number
 	 * @param episodes Episodes to post
-	 * @param allowUpdate (**unimplemented**) Updates episodes data if they already exist
+	 * @param allowUpdate Updates episodes data if they already exist
+	 * @param feedbackCb Called each time a new feedback is issued
 	 */
-	export async function postEpisodesInSeason(browser: puppeteer.Browser, showId: string, season: number, episodes: Episode[], allowUpdate?: boolean) {
+	export async function postEpisodesInSeason(browser: puppeteer.Browser, showId: string, season: number, episodes: Episode[], allowUpdate?: boolean, feedbackCb?: FeedbackCallback): Promise<Feedback[]> {
 
 		// === Get a page on the show's season's episodes edit page ===
 
@@ -50,45 +51,54 @@ export module ShowEpisodes {
 
 		// === Add/update episodes ===
 
-		const successes: boolean[] = [];
+		const feedbacks: Feedback[] = [];
 		for (const episode of episodes) {
 
 			const episodeRow = await getEpisodeTableRow(page, episode);
+			let episodeFeedback: Feedback;
 
-			// Update episode:
 			if (episodeRow) {
 				if (allowUpdate) {
-					console.log('updating episode...');
-					successes.push(await updateEpisode(page, episodeRow, episode));
-					continue;
+					// Update episode:
+					episodeFeedback = await updateEpisode(page, episodeRow, episode);
+				} else {
+					// Ignore episode:
+					episodeFeedback = new Feedback(episode, Status.IGNORED);
 				}
-				successes.push(true);
-				continue;
+			} else {
+				// Add episode:
+				episodeFeedback = await addNewEpisode(page, episode);
 			}
 
-			successes.push(await addNewEpisode(page, episode));
+			// Save (and emit) feedback:
+			feedbacks.push(episodeFeedback);
+			if (feedbackCb) {
+				feedbackCb(episodeFeedback);
+			}
 		}
 
-		return successes;
+		return feedbacks;
 	}
 
 	// =======================================================
 	// == FORM FILLING (Add/Update)
 	// =======================================================
 
-	async function addNewEpisode(page: puppeteer.Page, episode: Episode) {
+	async function addNewEpisode(page: puppeteer.Page, episode: Episode): Promise<Feedback> {
+
+		const feedback = new Feedback(episode);
 
 		// === Open the "Edit" modal windows ===
 
 		const addBtn = await page.$(SELECTORS.ADD_BTN);
 		if (!addBtn) {
-			throw new Errors.NotFound('"Add New Episode" button on ' + page.url());
+			return feedback.setError(new Errors.NotFound('"Add New Episode" button on ' + page.url()));
 		}
 
 		await addBtn?.click();
-		const input = await page.waitForSelector(SELECTORS.NUMBER_INPUT_CONTAINER);
+		const input = await page.waitForSelector(SELECTORS.NAME_INPUT);
 		if (!input) {
-			throw new Errors.NotFound('"Episode Number" input on ' + page.url());
+			return feedback.setError(new Errors.NotFound('"Episode Number" input on ' + page.url()));
 		}
 
 		// === Input episode data ===
@@ -112,11 +122,18 @@ export module ShowEpisodes {
 		await page.click(SELECTORS.SAVE_BTN);
 
 		// Wait for the modal to disappear:
-		await page.waitForSelector(SELECTORS.NUMBER_INPUT_CONTAINER, { hidden: true });
+		await page.waitForSelector(SELECTORS.NAME_INPUT, { hidden: true });
 
 		// === Check that the episode has been added ===
 
-		return !!getEpisodeTableRow(page, episode, true);
+		const addedRow = await getEpisodeTableRow(page, episode, true);
+		if (!addedRow) {
+			return feedback.setError(new Errors.NotFound('added row'));
+		}
+
+		feedback.item = addedRow.episode;
+		feedback.status = Status.ADDED;
+		return feedback;
 	}
 
 	/**
@@ -125,18 +142,24 @@ export module ShowEpisodes {
 	 * @param episodeRow Existing episode data and its Edit button ElementHandle
 	 * @param episode Episode data to update: Name, Overview, and Air Date will be updated only if not empty. Note: Episode Number cannot be updated and is used as an identifier.
 	 */
-	async function updateEpisode(page: puppeteer.Page, episodeRow: EpisodeTableRow, episode: Episode) {
+	async function updateEpisode(page: puppeteer.Page, episodeRow: EpisodeTableRow, episode: Episode): Promise<Feedback> {
+
+		const feedback = new Feedback(episode);
 
 		// === Open the "Edit" modal windows ===
 
 		if (!episodeRow.editBtn) {
-			throw new Errors.NotFound(`edit button for episode row ${episodeRow.episode.number} on ${page.url()}`);
+			return feedback.setError(
+				new Errors.NotFound(`edit button for episode row on ${page.url()}`)
+			);
 		}
 		episodeRow.editBtn.click();
 
-		const input = await page.waitForSelector(SELECTORS.NUMBER_INPUT_CONTAINER);
+		const input = await page.waitForSelector(SELECTORS.NAME_INPUT);
 		if (!input) {
-			throw new Errors.NotFound('"Episode Number" input on ' + page.url());
+			return feedback.setError(
+				new Errors.NotFound('"Episode Number" input on ' + page.url())
+			);
 		}
 
 		// === Input episode data ===
@@ -146,18 +169,21 @@ export module ShowEpisodes {
 				SELECTORS.NAME_INPUT,
 				episode.name
 			);
+			feedback.status = Status.UPDATED;
 		}
 		if (episode.overview && episode.overview !== episodeRow.episode.overview) {
 			await InterfaceHelpers.replaceValue(page,
 				SELECTORS.OVERVIEW_INPUT,
 				episode.overview
 			);
+			feedback.status = Status.UPDATED;
 		}
 		if (episode.date && episode.date !== episodeRow.episode.date) {
 			await InterfaceHelpers.replaceValue(page,
 				SELECTORS.AIR_DATE_INPUT,
 				episode.date
 			);
+			feedback.status = Status.UPDATED;
 		}
 
 		// === Submit form ===
@@ -165,11 +191,17 @@ export module ShowEpisodes {
 		await page.click(SELECTORS.SAVE_BTN);
 
 		// Wait for the modal to disappear:
-		await page.waitForSelector(SELECTORS.NUMBER_INPUT_CONTAINER, { hidden: true });
+		await page.waitForSelector(SELECTORS.NAME_INPUT, { hidden: true });
 
 		// === Check that the season has been updated ===
 
-		return !!getEpisodeTableRow(page, episode, true);
+		const updatedRow = await getEpisodeTableRow(page, episode, true);
+		if (!updatedRow) {
+			return feedback.setError(new Errors.NotFound('updated row'));
+		}
+
+		feedback.item = updatedRow.episode;
+		return feedback;
 	}
 
 	// =======================================================
@@ -188,8 +220,6 @@ export module ShowEpisodes {
 		episode: Episode,
 		compareInfo: boolean = false
 	): Promise<EpisodeTableRow | undefined> {
-
-		console.log('checking', JSON.stringify(episode));
 
 		// === Parse ===
 
@@ -222,8 +252,6 @@ export module ShowEpisodes {
 			throw new Errors.NotFound('episodes rows on ' + page.url());
 		}
 
-		console.log('episodesRows:', JSON.stringify(episodesRows.map(r => r.episode)));
-
 		// === Compare ===
 
 		// Find episode with same number:
@@ -231,10 +259,8 @@ export module ShowEpisodes {
 			s.episode.number === episode.number
 		);
 		if (!episodeRowToCheck) {
-			console.log('episode not found:', episode.number);
 			return undefined;
 		}
-		console.log('episodeRowToCheck:', JSON.stringify(episodeRowToCheck.episode));
 
 		// Further comparison if needed:
 		if (compareInfo) {

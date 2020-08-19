@@ -30,12 +30,10 @@ export module ShowSeasons {
 	 * @param browser
 	 * @param showId TMDb ID of the show
 	 * @param season Season to post. `name` default to `'Season N'` (without zero-padding) and `overview` defaults to an empty string.
-	 * @param allowUpdate (**unimplemented**) Updates season data if it already exists
+	 * @param allowUpdate Updates season data if it already exists
 	 * @returns `true` if the season has been added or already existed.
 	 */
 	export async function postSeason(browser: puppeteer.Browser, showId: string, season: Season, allowUpdate?: boolean) {
-
-		console.log('posting season', JSON.stringify(season));
 
 		// === Get a page on the show's seasons edit page ===
 
@@ -52,14 +50,12 @@ export module ShowSeasons {
 		// Update season:
 		if (seasonRow) {
 			if (allowUpdate) {
-				console.log('updating season...');
 				return updateSeason(page, seasonRow, season);
 			}
 			return true;
 		}
 
 		// Add New Season:
-		console.log('adding season...', JSON.stringify(season));
 		return addNewSeason(page, season);
 	}
 
@@ -175,8 +171,6 @@ export module ShowSeasons {
 		compareInfo: boolean = false
 	): Promise<SeasonTableRow | undefined> {
 
-		console.log('checking', JSON.stringify(season));
-
 		// === Parse ===
 
 		// Getting an ElementHandle on each row of the seasons table:
@@ -205,8 +199,6 @@ export module ShowSeasons {
 			throw new Errors.NotFound('season rows on ' + page.url());
 		}
 
-		console.log('seasonsRows:', JSON.stringify(seasonsRows.map(r => r.season)));
-
 		// === Compare ===
 
 		// Find season with same number:
@@ -214,10 +206,8 @@ export module ShowSeasons {
 			s.season.number === season.number
 		);
 		if (!seasonRowToCheck) {
-			console.log('season not found:', season.number);
 			return undefined;
 		}
-		console.log('seasonRowToCheck:', JSON.stringify(seasonRowToCheck.season));
 
 		// Further comparison if needed:
 		if (compareInfo) {
