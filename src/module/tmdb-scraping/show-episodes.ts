@@ -92,13 +92,17 @@ export module ShowEpisodes {
 
 		const addBtn = await page.$(SELECTORS.ADD_BTN);
 		if (!addBtn) {
-			return feedback.setError(new Errors.NotFound('"Add New Episode" button on ' + page.url()));
+			return feedback.setError(
+				new Errors.NotFound('"Add New Episode" button on ' + page.url())
+			);
 		}
 
 		await addBtn?.click();
 		const input = await page.waitForSelector(SELECTORS.NAME_INPUT);
 		if (!input) {
-			return feedback.setError(new Errors.NotFound('"Episode Number" input on ' + page.url()));
+			return feedback.setError(
+				new Errors.NotFound('"Episode Number" input on ' + page.url())
+			);
 		}
 
 		// === Input episode data ===
@@ -131,9 +135,7 @@ export module ShowEpisodes {
 			return feedback.setError(new Errors.NotFound('added row'));
 		}
 
-		feedback.item = addedRow.episode;
-		feedback.status = Status.ADDED;
-		return feedback;
+		return feedback.setAdded(addedRow.episode);
 	}
 
 	/**
@@ -144,7 +146,7 @@ export module ShowEpisodes {
 	 */
 	async function updateEpisode(page: puppeteer.Page, episodeRow: EpisodeTableRow, episode: Episode): Promise<Feedback> {
 
-		const feedback = new Feedback(episode);
+		const feedback = new Feedback(episode, Status.UNCHANGED);
 
 		// === Open the "Edit" modal windows ===
 

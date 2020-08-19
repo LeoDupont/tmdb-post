@@ -26,13 +26,17 @@ export class Feedback {
 	constructor(
 		public item?: Season | Episode,
 		public status?: Status,
-	) {
-		this.status = status || Status.UNCHANGED;
-	}
+	) {}
 
 	public setError(err: Error): Feedback {
 		this.error = err;
 		this.status = Status.ERROR;
+		return this;
+	}
+
+	public setAdded(item: Season | Episode) {
+		this.item = item;
+		this.status = Status.ADDED;
 		return this;
 	}
 

@@ -15,6 +15,7 @@
 import { Season } from "../../data/tv-show";
 import { TestHelpers } from "../test-helpers";
 import { TmdbPost } from "../../tmdb-post";
+import { Status } from "../../data/feedback";
 
 describe('ShowSeasons', () => {
 
@@ -40,18 +41,18 @@ describe('ShowSeasons', () => {
 		}, 30000);
 
 		test.skip('can ignore an existing season', async () => {
-			const added = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.existingSeason, false);
-			expect(added).toBeTruthy();
+			const feedback = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.existingSeason, false);
+			expect(feedback.status).toBe(Status.IGNORED);
 		}, 30000);
 
 		test.skip('can update an existing season', async () => {
-			const added = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.existingSeason, true);
-			expect(added).toBeTruthy();
+			const feedback = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.existingSeason, true);
+			expect([Status.UPDATED, Status.UNCHANGED]).toContain(feedback.status);
 		}, 30000);
 
 		test.skip('can post a new season', async () => {
-			const added = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.newSeason, false);
-			expect(added).toBeTruthy();
+			const feedback = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.newSeason, false);
+			expect(feedback.status).toBe(Status.ADDED);
 		}, 30000);
 
 	});

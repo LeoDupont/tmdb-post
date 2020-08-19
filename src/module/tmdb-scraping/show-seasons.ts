@@ -4,6 +4,7 @@ import { Navigation } from './navigation';
 import { Errors } from '../errors';
 import { Season, Episode } from '../data/tv-show';
 import { InterfaceHelpers } from './interface-helpers';
+import { FeedbackCallback, Feedback, Status } from '../data/feedback';
 
 export module ShowSeasons {
 
@@ -33,7 +34,7 @@ export module ShowSeasons {
 	 * @param allowUpdate Updates season data if it already exists
 	 * @returns `true` if the season has been added or already existed.
 	 */
-	export async function postSeason(browser: puppeteer.Browser, showId: string, season: Season, allowUpdate?: boolean) {
+	export async function postSeason(browser: puppeteer.Browser, showId: string, season: Season, allowUpdate?: boolean): Promise<Feedback> {
 
 		// === Get a page on the show's seasons edit page ===
 
@@ -47,15 +48,16 @@ export module ShowSeasons {
 
 		const seasonRow = await getSeasonTableRow(page, season);
 
-		// Update season:
 		if (seasonRow) {
 			if (allowUpdate) {
+				// Update season:
 				return updateSeason(page, seasonRow, season);
 			}
-			return true;
+			// Ignore season:
+			return new Feedback(season, Status.IGNORED);
 		}
 
-		// Add New Season:
+		// Add season:
 		return addNewSeason(page, season);
 	}
 
@@ -69,19 +71,25 @@ export module ShowSeasons {
 	 * @param season Season to post. `name` default to `'Season N'` (without zero-padding) and `overview` defaults to an empty string.
 	 * @returns `true` if the season has been added or already existed
 	 */
-	async function addNewSeason(page: puppeteer.Page, season: Season) {
+	async function addNewSeason(page: puppeteer.Page, season: Season): Promise<Feedback> {
+
+		const feedback = new Feedback(season);
 
 		// === Open the "Edit" modal windows ===
 
 		const addBtn = await page.$(SELECTORS.ADD_BTN);
 		if (!addBtn) {
-			throw new Errors.NotFound('"Add New Season" button on ' + page.url());
+			return feedback.setError(
+				new Errors.NotFound('"Add New Season" button on ' + page.url())
+			);
 		}
 
 		await addBtn?.click();
 		const input = await page.waitForSelector(SELECTORS.NUMBER_INPUT_CONTAINER);
 		if (!input) {
-			throw new Errors.NotFound('"Season Number" input on ' + page.url());
+			return feedback.setError(
+				new Errors.NotFound('"Season Number" input on ' + page.url())
+			);
 		}
 
 		// === Input season data ===
@@ -104,7 +112,12 @@ export module ShowSeasons {
 
 		// === Check that the season has been added ===
 
-		return !!getSeasonTableRow(page, season, true);
+		const addedRow = await getSeasonTableRow(page, season, true);
+		if (!addedRow) {
+			return feedback.setError(new Errors.NotFound('added row'));
+		}
+
+		return feedback.setAdded(addedRow.season);
 	}
 
 	/**
@@ -115,16 +128,22 @@ export module ShowSeasons {
 	 */
 	async function updateSeason(page: puppeteer.Page, seasonRow: SeasonTableRow, season: Season) {
 
+		const feedback = new Feedback(season, Status.UNCHANGED);
+
 		// === Open the "Edit" modal windows ===
 
 		if (!seasonRow.editBtn) {
-			throw new Errors.NotFound(`edit button for season row ${seasonRow.season.number} on ${page.url()}`);
+			return feedback.setError(
+				new Errors.NotFound(`edit button for season row ${seasonRow.season.number} on ${page.url()}`)
+			);
 		}
 		seasonRow.editBtn.click();
 
 		const input = await page.waitForSelector(SELECTORS.NUMBER_INPUT_CONTAINER);
 		if (!input) {
-			throw new Errors.NotFound('"Season Number" input on ' + page.url());
+			return feedback.setError(
+				new Errors.NotFound('"Season Number" input on ' + page.url())
+			);
 		}
 
 		// === Input season data ===
@@ -134,12 +153,14 @@ export module ShowSeasons {
 				SELECTORS.NAME_INPUT,
 				season.name
 			);
+			feedback.status = Status.UPDATED;
 		}
 		if (season.overview && season.overview !== seasonRow.season.overview) {
 			await InterfaceHelpers.replaceValue(page,
 				SELECTORS.OVERVIEW_INPUT,
 				season.overview
 			);
+			feedback.status = Status.UPDATED;
 		}
 
 		// === Submit form ===
@@ -151,7 +172,13 @@ export module ShowSeasons {
 
 		// === Check that the season has been updated ===
 
-		return !!getSeasonTableRow(page, season, true);
+		const updatedRow = await getSeasonTableRow(page, season, true);
+		if (!updatedRow) {
+			return feedback.setError(new Errors.NotFound('updated row'));
+		}
+
+		feedback.item = updatedRow.season;
+		return feedback;
 	}
 
 	// =======================================================
