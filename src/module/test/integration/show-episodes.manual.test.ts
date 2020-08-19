@@ -13,27 +13,72 @@
  */
 
 import { Episode } from "../../data/tv-show";
+import { TmdbPost } from "../..";
+import { TestHelpers } from "../test-helpers";
 
 describe('ShowEpisodes', () => {
 
-	describe.skip('Posting episodes', () => {
+	describe('Posting episodes', () => {
 
 		const UNIQUE_DATA = {
-			showId: <string> '',
-			season: <number> 9,
-			episodes: <Episode[]> [
-				{ number: 1, name: 'Casting Marseille', overview: '', date: '2012-12-11' },
-				{ number: 2, name: 'Casting Lyon', overview: '', date: '2012-12-18' },
-			],
+			EXISTING: {
+				showId: <string> '12121-nouvelle-star',
+				season: <number> 9,
+				episodes: <Episode[]> [
+					{ number: 1, overview: ' ' },
+					{ number: 2, overview: ' ' },
+				],
+			},
+			NEW: {
+				showId: <string> '12121-nouvelle-star',
+				season: <number> 9,
+				episodes: <Episode[]> [
+					// { number: 1, name: 'Casting Marseille', overview: '', date: '2012-12-11' },
+					{ number: 2, name: 'Casting Lyon', overview: 'Second casting', date: '2012-12-18' },
+					{ number: 3, name: 'Casting Paris', overview: '', date: '2012-12-25' },
+				],
+			}
 		};
 
-		test('should post new episodes', async () => {
-			expect(false).toBeTruthy();
-		});
+		let tmdb: TmdbPost;
 
-		test('should ignore existing episodes', async () => {
-			expect(false).toBeTruthy();
-		});
+		beforeAll(async () => {
+			tmdb = await TestHelpers.initAndLogInTmdb();
+		}, 30000);
+		afterAll(() => {
+			return tmdb.destroy();
+		}, 30000);
+
+		test.skip('can ignore existing episodes', async () => {
+			const added = await tmdb.postEpisodesInSeason(
+				UNIQUE_DATA.EXISTING.showId,
+				UNIQUE_DATA.EXISTING.season,
+				UNIQUE_DATA.EXISTING.episodes,
+				false
+			);
+			expect(added).toBeTruthy();
+		}, 30000);
+
+		test.skip('can update existing episodes', async () => {
+			const added = await tmdb.postEpisodesInSeason(
+				UNIQUE_DATA.EXISTING.showId,
+				UNIQUE_DATA.EXISTING.season,
+				UNIQUE_DATA.EXISTING.episodes,
+				true
+			);
+			expect(added).toBeTruthy();
+		}, 30000);
+
+		test.skip('can post new episodes', async () => {
+			const added = await tmdb.postEpisodesInSeason(
+				UNIQUE_DATA.NEW.showId,
+				UNIQUE_DATA.NEW.season,
+				UNIQUE_DATA.NEW.episodes,
+				false
+			);
+			expect(added).toBeTruthy();
+		}, 30000);
+
 
 	});
 

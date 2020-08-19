@@ -13,6 +13,7 @@ export module ShowSeasons {
 		NAME_INPUT: '#en-US_name_text_input_field',
 		OVERVIEW_INPUT: '#en-US_overview_text_box_field',
 		SAVE_BTN: '.k-edit-buttons.k-state-default > a.k-button.k-button-icontext.k-primary.k-grid-update',
+		TABLE_ROWS: '#grid > div.k-grid-content.k-auto-scrollable > table tr',
 	};
 
 	type SeasonTableRow = {
@@ -105,7 +106,7 @@ export module ShowSeasons {
 		// Wait for the modal to disappear:
 		await page.waitForSelector(SELECTORS.NUMBER_INPUT_CONTAINER, { hidden: true });
 
-		// === Check that the season has been added/updated ===
+		// === Check that the season has been added ===
 
 		return !!getSeasonTableRow(page, season, true);
 	}
@@ -114,14 +115,14 @@ export module ShowSeasons {
 	 * Edits an existing season entry with provided data.
 	 * @param page Page open on the show's seasons edit page
 	 * @param seasonRow Existing season data and its Edit button Element
-	 * @param season Season data to update: Name and Overview will be updated only if not empty.
+	 * @param season Season data to update: Name and Overview will be updated only if not empty. Note: Season Number cannot be updated and is used as an identifier.
 	 */
 	async function updateSeason(page: puppeteer.Page, seasonRow: SeasonTableRow, season: Season) {
 
 		// === Open the "Edit" modal windows ===
 
 		if (!seasonRow.editBtn) {
-			throw new Errors.NotFound('edit button for season row ' + seasonRow.season.number + ' on ' + page.url());
+			throw new Errors.NotFound(`edit button for season row ${seasonRow.season.number} on ${page.url()}`);
 		}
 		seasonRow.editBtn.click();
 
@@ -132,13 +133,13 @@ export module ShowSeasons {
 
 		// === Input season data ===
 
-		if (season.name) {
+		if (season.name && season.name !== seasonRow.season.name) {
 			await InterfaceHelpers.replaceValue(page,
 				SELECTORS.NAME_INPUT,
 				season.name
 			);
 		}
-		if (season.overview) {
+		if (season.overview && season.overview !== seasonRow.season.overview) {
 			await InterfaceHelpers.replaceValue(page,
 				SELECTORS.OVERVIEW_INPUT,
 				season.overview
@@ -176,27 +177,14 @@ export module ShowSeasons {
 
 		console.log('checking', JSON.stringify(season));
 
-		// Get seasons rows:
-		// const seasons = await page.$$eval(
-		// 	`#grid > div.k-grid-content.k-auto-scrollable > table tr`,
-		// 	(trs) => {
-		// 		return trs.map(tr => {
-		// 			return {
-		// 				season: <Season> {
-		// 					number: Number(tr.childNodes[0].textContent),
-		// 					name: tr.childNodes[1].textContent,
-		// 					overview: tr.childNodes[2].textContent,
-		// 				},
-		// 				editBtn: tr.childNodes[5]
-		// 			};
-		// 		});
-		// 	}
-		// );
-
 		// === Parse ===
 
 		// Getting an ElementHandle on each row of the seasons table:
-		const rows = await page.$$(`#grid > div.k-grid-content.k-auto-scrollable > table tr`);
+		const table = await page.waitForSelector(SELECTORS.TABLE_ROWS);
+		if (!table) {
+			throw new Errors.NotFound('seasons table did not show up on ' + page.url());
+		}
+		const rows = await page.$$(SELECTORS.TABLE_ROWS);
 
 		// Parsing table rows and getting an ElementHandle on the edit buttons:
 		const seasonsRows: SeasonTableRow[] = [];
@@ -210,7 +198,7 @@ export module ShowSeasons {
 
 			seasonsRows.push({
 				season: parsedSeason,
-				editBtn: await row.$('td:nth-child(6)')
+				editBtn: await row.$('td:nth-child(6) > a')
 			});
 		}
 		if (seasonsRows.length < 1) {

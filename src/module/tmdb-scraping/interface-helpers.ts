@@ -2,6 +2,10 @@ import puppeteer from 'puppeteer';
 
 export module InterfaceHelpers {
 
+	// =======================================================
+	// == INPUTS
+	// =======================================================
+
 	/**
 	 * Clears a regular input's value and types a new one.
 	 * @param elementHandle Handle to the input element to edit
@@ -45,7 +49,6 @@ export module InterfaceHelpers {
 
 		// Type new Number value:
 		await page.keyboard.type(value);
-
 	}
 
 }
