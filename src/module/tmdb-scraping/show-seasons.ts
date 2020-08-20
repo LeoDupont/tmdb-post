@@ -2,9 +2,10 @@ import puppeteer from 'puppeteer';
 import { Browser } from '../browser';
 import { Navigation } from './navigation';
 import { Errors } from '../errors';
-import { Season, Episode } from '../data/tv-show';
+import { Season, } from '../data/tv-show';
 import { InterfaceHelpers } from './interface-helpers';
-import { FeedbackCallback, Feedback, Status } from '../data/feedback';
+import { Feedback, Status } from '../data/feedback';
+import { PostOptions } from '../data/options';
 
 export module ShowSeasons {
 
@@ -31,14 +32,15 @@ export module ShowSeasons {
 	 * @param browser
 	 * @param showId TMDb ID of the show
 	 * @param season Season to post. `name` default to `'Season N'` (without zero-padding) and `overview` defaults to an empty string.
-	 * @param allowUpdate Updates season data if it already exists
+	 * @param options PostOptions (like `language`, `allowUpdate`...)
 	 * @returns `true` if the season has been added or already existed.
 	 */
-	export async function postSeason(browser: puppeteer.Browser, showId: string, season: Season, allowUpdate?: boolean): Promise<Feedback> {
+	export async function postSeason(browser: puppeteer.Browser, showId: string, season: Season, options: PostOptions = {}): Promise<Feedback> {
 
 		// === Get a page on the show's seasons edit page ===
 
-		const showUrl = Navigation.getShowUrl(showId, true, Navigation.ShowEditSections.Seasons);
+		const showUrl = Navigation.getShowUrl(showId, options.language, Navigation.ShowEditSections.Seasons);
+
 		const page = await Browser.getAPage(browser, showUrl, true);
 		if (page.url() !== showUrl) {
 			throw new Errors.NotFound(showUrl);
@@ -49,7 +51,7 @@ export module ShowSeasons {
 		const seasonRow = await getSeasonTableRow(page, season);
 
 		if (seasonRow) {
-			if (allowUpdate) {
+			if (options.allowUpdate) {
 				// Update season:
 				return updateSeason(page, seasonRow, season);
 			}

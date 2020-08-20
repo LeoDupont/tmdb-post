@@ -29,6 +29,7 @@ describe('ShowSeasons', () => {
 			showID: <string> '12121-nouvelle-star',
 			existingSeason: <Season> { number: 12, overview: ' ' },
 			newSeason: <Season> { number: 14, name: undefined, overview: undefined },
+			language: 'en-US',
 		};
 
 		let tmdb: TmdbPost;
@@ -41,17 +42,29 @@ describe('ShowSeasons', () => {
 		}, 30000);
 
 		test.skip('can ignore an existing season', async () => {
-			const feedback = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.existingSeason, false);
+			const feedback = await tmdb.postSeason(
+				UNIQUE_DATA.showID,
+				UNIQUE_DATA.existingSeason,
+				{ allowUpdate: false, language: UNIQUE_DATA.language },
+			);
 			expect(feedback.status).toBe(Status.IGNORED);
 		}, 30000);
 
 		test.skip('can update an existing season', async () => {
-			const feedback = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.existingSeason, true);
+			const feedback = await tmdb.postSeason(
+				UNIQUE_DATA.showID,
+				UNIQUE_DATA.existingSeason,
+				{ allowUpdate: false, language: UNIQUE_DATA.language },
+			);
 			expect([Status.UPDATED, Status.UNCHANGED]).toContain(feedback.status);
 		}, 30000);
 
 		test.skip('can post a new season', async () => {
-			const feedback = await tmdb.postSeason(UNIQUE_DATA.showID, UNIQUE_DATA.newSeason, false);
+			const feedback = await tmdb.postSeason(
+				UNIQUE_DATA.showID,
+				UNIQUE_DATA.newSeason,
+				{ allowUpdate: false, language: UNIQUE_DATA.language },
+			);
 			expect(feedback.status).toBe(Status.ADDED);
 		}, 30000);
 

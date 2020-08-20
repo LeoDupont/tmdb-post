@@ -6,6 +6,7 @@ import { Auth } from './tmdb-scraping/auth';
 import { ShowSeasons } from './tmdb-scraping/show-seasons';
 import { ShowEpisodes } from './tmdb-scraping/show-episodes';
 import { FeedbackCallback } from './data/feedback';
+import { PostOptions } from './data/options';
 
 /**
  * Main class of tmdb-post.
@@ -79,12 +80,12 @@ export class TmdbPost {
 	 * Posts a new season in a TV show if it doesn't already exist.
 	 * @param showId TMDb ID of the show
 	 * @param season Season to post. `name` default to `'Season N'` (without zero-padding) and `overview` defaults to an empty string.
-	 * @param allowUpdate Updates season data if it already exists
+	 * @param options PostOptions (like `language`, `allowUpdate`...)
 	 * @returns `true` if the season has been added or already exists
 	 */
-	public async postSeason(showId: string, season: Season, allowUpdate?: boolean) {
+	public async postSeason(showId: string, season: Season, options: PostOptions) {
 		this.checkBrowser();
-		return ShowSeasons.postSeason(this.browser!, showId, season, allowUpdate);
+		return ShowSeasons.postSeason(this.browser!, showId, season, options);
 	}
 
 	// -------------------------------------------------------
@@ -96,12 +97,12 @@ export class TmdbPost {
 	 * @param showId TMDb ID of the show
 	 * @param season Season number
 	 * @param episodes Episodes to post
-	 * @param allowUpdate Updates episodes data if they already exist
+	 * @param options PostOptions (like `language`, `allowUpdate`...)
 	 * @param feedbackCb Called each time a new feedback is issued
 	 */
-	public async postEpisodesInSeason(showId: string, season: number, episodes: Episode[], allowUpdate?: boolean, feedbackCb?: FeedbackCallback) {
+	public async postEpisodesInSeason(showId: string, season: number, episodes: Episode[], options?: PostOptions, feedbackCb?: FeedbackCallback) {
 		this.checkBrowser();
-		return ShowEpisodes.postEpisodesInSeason(this.browser!, showId, season, episodes, allowUpdate, feedbackCb);
+		return ShowEpisodes.postEpisodesInSeason(this.browser!, showId, season, episodes, options, feedbackCb);
 	}
 
 }

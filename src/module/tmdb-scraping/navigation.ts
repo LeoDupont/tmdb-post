@@ -3,6 +3,22 @@ export module Navigation {
 	export const BASE_URL = 'https://www.themoviedb.org';
 
 	// =======================================================
+	// == HELPERS
+	// =======================================================
+
+	/**
+	 * Concatenates GET parameters to the base URL.
+	 * @param url Base URL
+	 * @param params Array of GET parameters
+	 */
+	function createUrl(url: string, params: string[]) {
+		if (params.length > 0) {
+			return url + '?' + params.join('&');
+		}
+		return url;
+	}
+
+	// =======================================================
 	// == BASICS
 	// =======================================================
 
@@ -43,41 +59,48 @@ export module Navigation {
 	/**
 	 * Get a URL to a TV show page in view or `edit` mode.
 	 * @param showId TMDb ID of the show
-	 * @param edit `true` to get a URL to the edit page of this show
-	 * @param section To get to a specific edit section
+	 * @param language Set the language of the show translation to work with. Uses the user's default language if undefined.
+	 * @param editSection To get to a specific edit section
 	 */
-	export function getShowUrl(showId: string, edit?: boolean, section?: ShowEditSections) {
+	export function getShowUrl(showId: string, language?: string, editSection?: ShowEditSections) {
+
+		const params = [];
 		let showUrl = `${BASE_URL}/tv/${showId}`;
 
-		if (edit) {
+		if (editSection) {
 			showUrl += '/edit';
-			if (section) {
-				showUrl += '?active_nav_item=' + section;
-			}
+			params.push('active_nav_item=' + editSection);
 		}
 
-		return showUrl;
+		if (language) {
+			params.push('language=' + language);
+		}
+
+		return createUrl(showUrl, params);
 	}
 
 	/**
 	 * Get a URL to a season of a TV show in view or `edit` mode.
 	 * @param showId TMDb ID of the show
 	 * @param season Season number (`0` for the 'Specials' season)
-	 * @param edit `true` to get a URL to the edit page of the season
-	 * @param section To get to a specific edit section
+	 * @param language Set the language of the show translation to work with. Uses the user's default language if undefined.
+	 * @param editSection To get to a specific edit section
 	 */
-	export function getSeasonUrl(showId: string, season: number, edit?: boolean, section?: SeasonEditSections) {
+	export function getSeasonUrl(showId: string, season: number, language?: string, editSection?: SeasonEditSections) {
+
+		const params = [];
 		let seasonUrl = `${BASE_URL}/tv/${showId}/season/${season}`;
 
-		if (edit) {
+		if (editSection) {
 			seasonUrl += '/edit';
-
-			if (section) {
-				seasonUrl += '?active_nav_item=' + section;
-			}
+			params.push('active_nav_item=' + editSection);
 		}
 
-		return seasonUrl;
+		if (language) {
+			params.push('language=' + language);
+		}
+
+		return createUrl(seasonUrl, params);
 	}
 
 }

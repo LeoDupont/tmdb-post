@@ -6,6 +6,7 @@ import { Episode } from '../data/tv-show';
 import { InterfaceHelpers } from './interface-helpers';
 import { DatesHelpers } from '../data/dates-helpers';
 import { FeedbackCallback, Feedback, Status } from '../data/feedback';
+import { PostOptions } from '../data/options';
 
 export module ShowEpisodes {
 
@@ -34,16 +35,15 @@ export module ShowEpisodes {
 	 * @param showId TMDb ID of the show
 	 * @param season Season number
 	 * @param episodes Episodes to post
-	 * @param allowUpdate Updates episodes data if they already exist
+	 * @param options PostOptions (like `language`, `allowUpdate`...)
 	 * @param feedbackCb Called each time a new feedback is issued
 	 */
-	export async function postEpisodesInSeason(browser: puppeteer.Browser, showId: string, season: number, episodes: Episode[], allowUpdate?: boolean, feedbackCb?: FeedbackCallback): Promise<Feedback[]> {
+	export async function postEpisodesInSeason(browser: puppeteer.Browser, showId: string, season: number, episodes: Episode[], options: PostOptions = {}, feedbackCb?: FeedbackCallback): Promise<Feedback[]> {
 
 		// === Get a page on the show's season's episodes edit page ===
 
-		const seasonUrl = Navigation.getSeasonUrl(showId, season, true,
-			Navigation.SeasonEditSections.Episodes
-		);
+		const seasonUrl = Navigation.getSeasonUrl(showId, season, options.language, Navigation.SeasonEditSections.Episodes);
+
 		const page = await Browser.getAPage(browser, seasonUrl, true);
 		if (page.url() !== seasonUrl) {
 			throw new Errors.NotFound(seasonUrl);
@@ -58,7 +58,7 @@ export module ShowEpisodes {
 			let episodeFeedback: Feedback;
 
 			if (episodeRow) {
-				if (allowUpdate) {
+				if (options.allowUpdate) {
 					// Update episode:
 					episodeFeedback = await updateEpisode(page, episodeRow, episode);
 				} else {
