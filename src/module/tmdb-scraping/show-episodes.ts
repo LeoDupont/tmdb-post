@@ -6,7 +6,8 @@ import { Episode } from '../data/tv-show';
 import { InterfaceHelpers } from './interface-helpers';
 import { DatesHelpers } from '../data/dates-helpers';
 import { FeedbackCallback, Feedback, Status } from '../data/feedback';
-import { PostOptions } from '../data/options';
+import { PostOptions, DateLocale } from '../data/options';
+import { Config } from '../config';
 
 export module ShowEpisodes {
 
@@ -40,9 +41,13 @@ export module ShowEpisodes {
 	 */
 	export async function postEpisodesInSeason(browser: puppeteer.Browser, showId: string, season: number, episodes: Episode[], options: PostOptions = {}, feedbackCb?: FeedbackCallback): Promise<Feedback[]> {
 
+		// === Default options ===
+
+		options.dateLocale = options.dateLocale || Config.dateLocale;
+
 		// === Get a page on the show's season's episodes edit page ===
 
-		const seasonUrl = Navigation.getSeasonUrl(showId, season, options.language, Navigation.SeasonEditSections.Episodes);
+		const seasonUrl = Navigation.getSeasonUrl(showId, season, options.translation, Navigation.SeasonEditSections.Episodes);
 
 		const page = await Browser.getAPage(browser, seasonUrl, true);
 		if (page.url() !== seasonUrl) {
@@ -84,7 +89,7 @@ export module ShowEpisodes {
 	// == FORM FILLING (Add/Update)
 	// =======================================================
 
-	async function addNewEpisode(page: puppeteer.Page, episode: Episode): Promise<Feedback> {
+	async function addNewEpisode(page: puppeteer.Page, episode: Episode, options: PostOptions): Promise<Feedback> {
 
 		const feedback = new Feedback(episode);
 
@@ -130,7 +135,7 @@ export module ShowEpisodes {
 
 		// === Check that the episode has been added ===
 
-		const addedRow = await getEpisodeTableRow(page, episode, true);
+		const addedRow = await getEpisodeTableRow(page, episode, true, options);
 		if (!addedRow) {
 			return feedback.setError(new Errors.NotFound('added row'));
 		}
@@ -143,8 +148,9 @@ export module ShowEpisodes {
 	 * @param page Page open on the season's episodes edit page
 	 * @param episodeRow Existing episode data and its Edit button ElementHandle
 	 * @param episode Episode data to update: Name, Overview, and Air Date will be updated only if not empty. Note: Episode Number cannot be updated and is used as an identifier.
+	 * @param options PostOptions (like `language`, `allowUpdate`...)
 	 */
-	async function updateEpisode(page: puppeteer.Page, episodeRow: EpisodeTableRow, episode: Episode): Promise<Feedback> {
+	async function updateEpisode(page: puppeteer.Page, episodeRow: EpisodeTableRow, episode: Episode, options: PostOptions): Promise<Feedback> {
 
 		const feedback = new Feedback(episode, Status.UNCHANGED);
 
@@ -197,7 +203,7 @@ export module ShowEpisodes {
 
 		// === Check that the season has been updated ===
 
-		const updatedRow = await getEpisodeTableRow(page, episode, true);
+		const updatedRow = await getEpisodeTableRow(page, episode, true, options);
 		if (!updatedRow) {
 			return feedback.setError(new Errors.NotFound('updated row'));
 		}
@@ -220,7 +226,8 @@ export module ShowEpisodes {
 	async function getEpisodeTableRow(
 		page: puppeteer.Page,
 		episode: Episode,
-		compareInfo: boolean = false
+		compareInfo: boolean,
+		options: PostOptions,
 	): Promise<EpisodeTableRow | undefined> {
 
 		// === Parse ===
@@ -243,7 +250,11 @@ export module ShowEpisodes {
 				date: tr.childNodes[3].textContent,
 			} as Episode));
 
-			parsedEpisode.date = DatesHelpers.MMDDYYYYtoYYYYMMDD(parsedEpisode.date);
+			if (options.dateLocale === DateLocale.DMY) {
+				parsedEpisode.date = DatesHelpers.DMYYYYtoYYYYMMDD(parsedEpisode.date);
+			} else { // MDY
+				parsedEpisode.date = DatesHelpers.MDYYYYtoYYYYMMDD(parsedEpisode.date);
+			}
 
 			episodesRows.push({
 				episode: parsedEpisode,

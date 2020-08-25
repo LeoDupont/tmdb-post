@@ -39,7 +39,7 @@ export module ShowSeasons {
 
 		// === Get a page on the show's seasons edit page ===
 
-		const showUrl = Navigation.getShowUrl(showId, options.language, Navigation.ShowEditSections.Seasons);
+		const showUrl = Navigation.getShowUrl(showId, options.translation, Navigation.ShowEditSections.Seasons);
 
 		const page = await Browser.getAPage(browser, showUrl, true);
 		if (page.url() !== showUrl) {
