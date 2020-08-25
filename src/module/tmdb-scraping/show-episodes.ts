@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import asyncPool from 'tiny-async-pool';
 import { Browser } from '../browser';
 import { Navigation } from './navigation';
 import { Errors } from '../errors';
@@ -49,40 +50,85 @@ export module ShowEpisodes {
 
 		const seasonUrl = Navigation.getSeasonUrl(showId, season, options.translation, Navigation.SeasonEditSections.Episodes);
 
-		const page = await Browser.getAPage(browser, seasonUrl, true);
-		if (page.url() !== seasonUrl) {
-			throw new Errors.NotFound(seasonUrl);
-		}
+		let feedbacks: Feedback[] = [];
 
-		// === Add/update episodes ===
+		const poolSize = Number(options.maxParallel);
+		if (poolSize > 1) {
 
-		const feedbacks: Feedback[] = [];
-		for (const episode of episodes) {
+			// === Parallel ===
 
-			const episodeRow = await getEpisodeTableRow(page, episode);
-			let episodeFeedback: Feedback;
+			// --- Prepare N pages ---
+			const pages = await Browser.openNPages(browser, seasonUrl, poolSize);
 
-			if (episodeRow) {
-				if (options.allowUpdate) {
-					// Update episode:
-					episodeFeedback = await updateEpisode(page, episodeRow, episode);
-				} else {
-					// Ignore episode:
-					episodeFeedback = new Feedback(episode, Status.IGNORED);
+			// --- Open pool ---
+			feedbacks = await asyncPool(
+				poolSize,
+				episodes,
+				async (episode) => {
+					return postEpisode(pages, episode, options, feedbackCb);
 				}
-			} else {
-				// Add episode:
-				episodeFeedback = await addNewEpisode(page, episode);
-			}
+			);
+		}
+		else {
 
-			// Save (and emit) feedback:
-			feedbacks.push(episodeFeedback);
-			if (feedbackCb) {
-				feedbackCb(episodeFeedback);
+			// === Serial ===
+
+			// --- Prepare one page ---
+			const page = await Browser.getAPage(browser, seasonUrl, true);
+
+			// --- Process episodes ---
+			for (const episode of episodes) {
+				feedbacks.push(
+					await postEpisode(page, episode, options, feedbackCb)
+				);
 			}
 		}
 
 		return feedbacks;
+	}
+
+	async function postEpisode(pageOrPages: puppeteer.Page | puppeteer.Page[], episode: Episode, options: PostOptions, feedbackCb?: FeedbackCallback) {
+
+		// === Get a (or the) page ===
+
+		let page: puppeteer.Page | undefined;
+		if (pageOrPages instanceof Array) {
+			page = Browser.getAvailablePage(pageOrPages);
+		} else {
+			page = pageOrPages;
+		}
+
+		if (!page) {
+			throw new Errors.NotFound('season\'s episodes edit page');
+		}
+
+		// === Check episode existence ===
+
+		const episodeRow = await getEpisodeTableRow(page, episode, false, options);
+
+		// === Add/Update/Ignore episode ===
+
+		let episodeFeedback: Feedback;
+		if (episodeRow) {
+			if (options.allowUpdate) {
+				// Update episode:
+				episodeFeedback = await updateEpisode(page, episodeRow, episode, options);
+			} else {
+				// Ignore episode:
+				episodeFeedback = new Feedback(episode, Status.IGNORED);
+			}
+		} else {
+			// Add episode:
+			episodeFeedback = await addNewEpisode(page, episode, options);
+		}
+
+		// Save (and emit) feedback:
+		if (feedbackCb) {
+			feedbackCb(episodeFeedback);
+		}
+
+		Browser.markPageAsAvailable(page);
+		return episodeFeedback;
 	}
 
 	// =======================================================
@@ -153,6 +199,9 @@ export module ShowEpisodes {
 	async function updateEpisode(page: puppeteer.Page, episodeRow: EpisodeTableRow, episode: Episode, options: PostOptions): Promise<Feedback> {
 
 		const feedback = new Feedback(episode, Status.UNCHANGED);
+		if (haveSameData(episodeRow.episode, episode)) {
+			return feedback;
+		}
 
 		// === Open the "Edit" modal windows ===
 
@@ -278,18 +327,22 @@ export module ShowEpisodes {
 		// Further comparison if needed:
 		if (compareInfo) {
 			// If provided episode name, overview, or air date are different:
-			if (
-				( episode.name &&
-					episode.name !== episodeRowToCheck.episode.name ) ||
-				( episode.overview &&
-					episode.overview !== episodeRowToCheck.episode.overview ) ||
-				( episode.date &&
-					episode.date !== episodeRowToCheck.episode.date )
-			) {
+			if (haveSameData(episodeRowToCheck.episode, episode)) {
 				return undefined;
 			}
 		}
 
 		return episodeRowToCheck;
+	}
+
+	function haveSameData(existing: Episode, provided: Episode) {
+		return (
+			( ! provided.name ||
+				provided.name === existing.name ) &&
+			( ! provided.overview ||
+				provided.overview === existing.overview ) &&
+			( ! provided.date ||
+				provided.date === existing.date )
+		);
 	}
 }

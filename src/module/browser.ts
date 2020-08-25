@@ -95,4 +95,34 @@ export module Browser {
 
 		return thePage;
 	}
+
+	export async function openNPages(browser: puppeteer.Browser, url: string, count: number): Promise<puppeteer.Page[]> {
+
+		const pages = [];
+
+		for (let i = 0 ; i < count ; i++) {
+			const page = await browser.newPage();
+			await page.goto(url);
+			markPageAsAvailable(page);
+			pages.push(page);
+		}
+
+		return pages;
+	}
+
+	export function getAvailablePage(pages: puppeteer.Page[]) {
+		for (const page of pages) {
+			if ((<any> page).tmdbpost_available) {
+				markPageAsUnavailable(page);
+				return page;
+			}
+		}
+	}
+
+	export function markPageAsAvailable(page: puppeteer.Page) {
+		(<any> page).tmdbpost_available = true;
+	}
+	export function markPageAsUnavailable(page: puppeteer.Page) {
+		(<any> page).tmdbpost_available = false;
+	}
 }

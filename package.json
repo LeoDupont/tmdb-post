@@ -46,6 +46,7 @@
     "inquirer": "^7.3.3",
     "path": "^0.12.7",
     "puppeteer": "^5.2.1",
+    "tiny-async-pool": "^1.1.0",
     "yargs": "^15.4.1"
   },
   "devDependencies": {
@@ -54,6 +55,7 @@
     "@types/jest": "^26.0.9",
     "@types/node": "^14.0.27",
     "@types/puppeteer": "^3.0.1",
+    "@types/tiny-async-pool": "^1.0.0",
     "@types/yargs": "^15.0.5",
     "jest": "^26.3.0",
     "nodemon": "^2.0.4",

@@ -26,8 +26,17 @@ describe('ShowEpisodes', () => {
 				showId: <string> '12121-nouvelle-star',
 				season: <number> 9,
 				episodes: <Episode[]> [
-					{ number: 1 },
-					{ number: 2 },
+					// { number: 1 },
+					// { number: 2 },
+					// { number: 3 },
+					// { number: 4 },
+					{ number: 6, name: 'Prime 1', overview: ' ', date: '2013-01-15' },
+					{ number: 7, name: 'Prime 2', overview: ' ', date: '2013-01-22' },
+					{ number: 8, name: 'Prime 3', overview: ' ', date: '2013-01-29' },
+					// { number: 9, name: 'Prime 4', overview: ' ', date: '2013-02-05' },
+					// { number: 10, name: 'Quarter Final', overview: '', date: '2013-02-12' },
+					// { number: 11, name: 'Semi-Final', overview: '', date: '2013-02-19' },
+					// { number: 12, name: 'Final', overview: ' ', date: '2013-02-26' },
 				],
 				language: 'en-US',
 			},
@@ -35,8 +44,6 @@ describe('ShowEpisodes', () => {
 				showId: <string> '12121-nouvelle-star',
 				season: <number> 9,
 				episodes: <Episode[]> [
-					{ number: 4, name: 'Theatre Day 1', overview: '', date: '2013-01-01' },
-					{ number: 5, name: 'Theatre Day 2', overview: '', date: '2013-01-08' },
 				],
 				language: 'en-US',
 			}
@@ -56,7 +63,11 @@ describe('ShowEpisodes', () => {
 				UNIQUE_DATA.EXISTING.showId,
 				UNIQUE_DATA.EXISTING.season,
 				UNIQUE_DATA.EXISTING.episodes,
-				{ allowUpdate: false, language: UNIQUE_DATA.EXISTING.language },
+				{
+					allowUpdate: false,
+					translation: UNIQUE_DATA.EXISTING.language,
+					// maxParallel: 2,
+				},
 				(fb) => console.log(JSON.stringify(fb))
 			);
 
@@ -64,12 +75,16 @@ describe('ShowEpisodes', () => {
 			expect(feedbacks.every(f => f.status === Status.IGNORED)).toBeTruthy();
 		}, 300000);
 
-		test.skip('can update existing episodes', async () => {
+		test('can update existing episodes', async () => {
 			const feedbacks = await tmdb.postEpisodesInSeason(
 				UNIQUE_DATA.EXISTING.showId,
 				UNIQUE_DATA.EXISTING.season,
 				UNIQUE_DATA.EXISTING.episodes,
-				{ allowUpdate: true, language: UNIQUE_DATA.EXISTING.language },
+				{
+					allowUpdate: true,
+					translation: UNIQUE_DATA.EXISTING.language,
+					// maxParallel: 4
+				},
 				(fb) => console.log(JSON.stringify(fb))
 			);
 
@@ -85,7 +100,11 @@ describe('ShowEpisodes', () => {
 				UNIQUE_DATA.NEW.showId,
 				UNIQUE_DATA.NEW.season,
 				UNIQUE_DATA.NEW.episodes,
-				{ allowUpdate: false, language: UNIQUE_DATA.NEW.language },
+				{
+					allowUpdate: false,
+					translation: UNIQUE_DATA.NEW.language,
+					maxParallel: 4
+				},
 				(fb) => console.log(JSON.stringify(fb))
 			);
 

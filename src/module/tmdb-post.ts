@@ -23,6 +23,7 @@ export class TmdbPost {
 	// =======================================================
 
 	public async init(options?: LaunchOptions | ConnectOptions, webSocketDebugUrl?: string) {
+
 		if (webSocketDebugUrl) {
 			this.browser = await Browser.attachToBrowser(webSocketDebugUrl, options);
 		} else {

@@ -19,4 +19,10 @@ export type PostOptions = {
 	 * Defaults to `false`.
 	 */
 	allowUpdate?: boolean,
+
+	/**
+	 * Number of items that can be posted in parallel (in separate tabs).
+	 * `0` and `1` mean no parallelization.
+	 */
+	maxParallel?: number,
 };
