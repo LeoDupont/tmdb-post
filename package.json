@@ -11,7 +11,7 @@
   },
   "scripts": {
     "lint": "tslint -p tsconfig.json",
-    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest --testPathIgnorePatterns manual.test",
     "test:episodes": "jest show-episodes.manual.test",
     "test:seasons": "jest show-seasons.manual.test",
