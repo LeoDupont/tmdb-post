@@ -12,20 +12,22 @@ describe('Browser', () => {
 			await browser.close();
 		}, 30000);
 
-		// test('should open installed browser with user profile', async () => {
-		// 	const browser = await Browser.launchBrowser({
-		// 		headless: false,
-		// 		executablePath: Config.browsers.EXECUTABLE_PATH,
-		// 		userDataDir: Config.browsers.PROFILE_DIR,
-		// 	});
+		/** Enable manually when needed */
+		test.skip('should open installed browser with user profile', async () => {
+			const browser = await Browser.launchBrowser({
+				headless: false,
+				executablePath: Config.browsers.EXECUTABLE_PATH,
+				userDataDir: Config.browsers.PROFILE_DIR,
+			});
 
-		// 	expect(browser.isConnected()).toBeTruthy();
-		// 	await browser.disconnect();
-		// }, 30000);
+			expect(browser.isConnected()).toBeTruthy();
+			await browser.disconnect();
+		}, 30000);
 
 	});
 
-	describe('attachBrowser()', () => {
+	/** Enable manually when needed */
+	describe.skip('attachBrowser()', () => {
 
 		test('should attach to an open browser', async () => {
 			const browser = await Browser.attachToBrowser(Config.browsers.WS_DEBUGGER_URL!);
