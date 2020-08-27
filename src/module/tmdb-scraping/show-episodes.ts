@@ -59,20 +59,20 @@ export module ShowEpisodes {
 		const feedbacks: Feedback[] = [];
 		for (const episode of episodes) {
 
-			const episodeRow = await getEpisodeTableRow(page, episode);
+			const episodeRow = await getEpisodeTableRow(page, episode, false, options);
 			let episodeFeedback: Feedback;
 
 			if (episodeRow) {
 				if (options.allowUpdate) {
 					// Update episode:
-					episodeFeedback = await updateEpisode(page, episodeRow, episode);
+					episodeFeedback = await updateEpisode(page, episodeRow, episode, options);
 				} else {
 					// Ignore episode:
 					episodeFeedback = new Feedback(episode, Status.IGNORED);
 				}
 			} else {
 				// Add episode:
-				episodeFeedback = await addNewEpisode(page, episode);
+				episodeFeedback = await addNewEpisode(page, episode, options);
 			}
 
 			// Save (and emit) feedback:

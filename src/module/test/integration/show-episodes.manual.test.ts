@@ -29,7 +29,7 @@ describe('ShowEpisodes', () => {
 					{ number: 1 },
 					{ number: 2 },
 				],
-				language: 'en-US',
+				translation: 'en-US',
 			},
 			NEW: {
 				showId: <string> '12121-nouvelle-star',
@@ -38,7 +38,7 @@ describe('ShowEpisodes', () => {
 					{ number: 4, name: 'Theatre Day 1', overview: '', date: '2013-01-01' },
 					{ number: 5, name: 'Theatre Day 2', overview: '', date: '2013-01-08' },
 				],
-				language: 'en-US',
+				translation: 'en-US',
 			}
 		};
 
@@ -56,7 +56,7 @@ describe('ShowEpisodes', () => {
 				UNIQUE_DATA.EXISTING.showId,
 				UNIQUE_DATA.EXISTING.season,
 				UNIQUE_DATA.EXISTING.episodes,
-				{ allowUpdate: false, language: UNIQUE_DATA.EXISTING.language },
+				{ allowUpdate: false, translation: UNIQUE_DATA.EXISTING.translation },
 				(fb) => console.log(JSON.stringify(fb))
 			);
 
@@ -69,7 +69,7 @@ describe('ShowEpisodes', () => {
 				UNIQUE_DATA.EXISTING.showId,
 				UNIQUE_DATA.EXISTING.season,
 				UNIQUE_DATA.EXISTING.episodes,
-				{ allowUpdate: true, language: UNIQUE_DATA.EXISTING.language },
+				{ allowUpdate: true, translation: UNIQUE_DATA.EXISTING.translation },
 				(fb) => console.log(JSON.stringify(fb))
 			);
 
@@ -85,7 +85,7 @@ describe('ShowEpisodes', () => {
 				UNIQUE_DATA.NEW.showId,
 				UNIQUE_DATA.NEW.season,
 				UNIQUE_DATA.NEW.episodes,
-				{ allowUpdate: false, language: UNIQUE_DATA.NEW.language },
+				{ allowUpdate: false, translation: UNIQUE_DATA.NEW.translation },
 				(fb) => console.log(JSON.stringify(fb))
 			);
 

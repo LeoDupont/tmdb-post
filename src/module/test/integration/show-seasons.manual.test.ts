@@ -29,7 +29,7 @@ describe('ShowSeasons', () => {
 			showID: <string> '12121-nouvelle-star',
 			existingSeason: <Season> { number: 12, overview: ' ' },
 			newSeason: <Season> { number: 14, name: undefined, overview: undefined },
-			language: 'en-US',
+			translation: 'en-US',
 		};
 
 		let tmdb: TmdbPost;
@@ -45,7 +45,7 @@ describe('ShowSeasons', () => {
 			const feedback = await tmdb.postSeason(
 				UNIQUE_DATA.showID,
 				UNIQUE_DATA.existingSeason,
-				{ allowUpdate: false, language: UNIQUE_DATA.language },
+				{ allowUpdate: false, translation: UNIQUE_DATA.translation },
 			);
 			expect(feedback.status).toBe(Status.IGNORED);
 		}, 30000);
@@ -54,7 +54,7 @@ describe('ShowSeasons', () => {
 			const feedback = await tmdb.postSeason(
 				UNIQUE_DATA.showID,
 				UNIQUE_DATA.existingSeason,
-				{ allowUpdate: false, language: UNIQUE_DATA.language },
+				{ allowUpdate: false, translation: UNIQUE_DATA.translation },
 			);
 			expect([Status.UPDATED, Status.UNCHANGED]).toContain(feedback.status);
 		}, 30000);
@@ -63,7 +63,7 @@ describe('ShowSeasons', () => {
 			const feedback = await tmdb.postSeason(
 				UNIQUE_DATA.showID,
 				UNIQUE_DATA.newSeason,
-				{ allowUpdate: false, language: UNIQUE_DATA.language },
+				{ allowUpdate: false, translation: UNIQUE_DATA.translation },
 			);
 			expect(feedback.status).toBe(Status.ADDED);
 		}, 30000);
